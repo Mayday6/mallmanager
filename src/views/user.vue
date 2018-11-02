@@ -10,9 +10,29 @@
   <el-input placeholder="请输入内容" class="searchInput" v-model="searchVal">
     <el-button slot="append" icon="el-icon-search" @click.prevent="checkUser()"></el-button>
   </el-input>
-   <el-button type="success" disabled>添加按钮</el-button>
+   <el-button type="success" @click.prevent="showaddUser()">添加按钮</el-button>
    </el-col>
 </el-row>
+   <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAddUser">
+  <el-form :model="formData">
+    <el-form-item label="用户名" :label-width="formLabelWidth">
+      <el-input v-model="formData.username" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="密码" :label-width="formLabelWidth">
+      <el-input v-model="formData.password" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="邮箱" :label-width="formLabelWidth">
+      <el-input v-model="formData.email" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="电话" :label-width="formLabelWidth">
+      <el-input v-model="formData.mobile" autocomplete="off"></el-input>
+    </el-form-item>
+  </el-form>
+  <div slot="footer" class="dialog-footer">
+    <el-button @click="dialogFormVisible = false">取 消</el-button>
+    <el-button type="primary" @click="addUser()">确 定</el-button>
+  </div>
+</el-dialog>
   <el-table
       v-loading="loading"
       :data="list"
@@ -100,7 +120,18 @@ export default {
       pagesize: 2,
       total: 0,
       // 搜索查询
-      searchVal: ''
+      searchVal: '',
+      // 添加用户对话框的属性
+      dialogFormVisibleAddUser: false,
+      // 表单数据
+      formData: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
+      },
+      // 对话框中的input的宽度
+      formLabelWidth: '120px'
     }
   },
   created () {
@@ -178,6 +209,27 @@ export default {
           message: '已取消删除'
         })
       })
+    },
+    // 显示添加的对话框
+    showaddUser () {
+      this.dialogFormVisibleAddUser = true
+    },
+    // 对话框添加用户
+    async addUser () {
+      // 调用这个方法的时候古娜彼对话框
+      this.dialogFormVisibleAddUser = false
+      // 发送请求
+      const res = await this.$http.post('users', this.formData)
+      const {meta: {status, msg}} = res.data
+      console.log(status)
+      this.loadTableData()
+      this.$message.success(msg)
+      // 清空表单
+      for (const key in this.formData) {
+        if (this.formData.hasOwnProperty(key)) {
+          this.formData[key] = ''
+        }
+      }
     }
   }
 }
