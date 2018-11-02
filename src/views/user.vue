@@ -7,8 +7,8 @@
 </el-breadcrumb>
 <el-row class="searchArea">
     <el-col :span=24>
-  <el-input placeholder="请输入内容" class="searchInput">
-    <el-button slot="append" icon="el-icon-search"></el-button>
+  <el-input placeholder="请输入内容" class="searchInput" v-model="searchVal">
+    <el-button slot="append" icon="el-icon-search" @click.prevent="checkUser()"></el-button>
   </el-input>
    <el-button type="success" disabled>成功按钮</el-button>
    </el-col>
@@ -96,7 +96,9 @@ export default {
       currentPage: 1,
       pagenum: 1,
       pagesize: 2,
-      total: 0
+      total: 0,
+      // 搜索查询
+      searchVal: ''
     }
   },
   created () {
@@ -108,7 +110,7 @@ export default {
       // 各种功能都需要加入token
       const AUTH_TOKEN = sessionStorage.getItem('token')
       this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-      const res = await this.$http.get(`users?pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
+      const res = await this.$http.get(`users?pagenum=${this.pagenum}&pagesize=${this.pagesize}&query=${this.searchVal}`)
       console.log(res)
       // 根据返回的数据获取总的条数
       this.total = res.data.data.total
@@ -120,6 +122,9 @@ export default {
         this.loading = false
         this.list = users
         // console.log(list)
+        this.pagesize = 2
+        this.pagenum = 1
+        this.currentPage = 1
       }
     },
     handleSizeChange (val) {
@@ -131,6 +136,10 @@ export default {
       this.pagenum = val
       this.loadTableData()
       console.log(`当前页: ${val}`)
+    },
+    // 查询用户
+    checkUser () {
+      this.loadTableData()
     }
   }
 }
