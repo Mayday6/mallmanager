@@ -72,6 +72,16 @@
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页 -->
+     <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="currentPage"
+      :page-sizes="[2, 4, 6, 8]"
+      :page-size="pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
 </el-card>
 
 </template>
@@ -81,8 +91,12 @@ export default {
   data () {
     return {
       list: [],
-      loading: true
+      loading: true,
       // 表格加载的动画
+      currentPage: 1,
+      pagenum: 1,
+      pagesize: 2,
+      total: 0
     }
   },
   created () {
@@ -94,8 +108,10 @@ export default {
       // 各种功能都需要加入token
       const AUTH_TOKEN = sessionStorage.getItem('token')
       this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-      const res = await this.$http.get('users?pagenum=1&pagesize=10')
+      const res = await this.$http.get(`users?pagenum=${this.pagenum}&pagesize=${this.pagesize}`)
       console.log(res)
+      // 根据返回的数据获取总的条数
+      this.total = res.data.data.total
       // 将返回的数据结构赋值
       const {meta: {msg, status}, data: {users}} = res.data
       console.log(msg)
@@ -105,6 +121,16 @@ export default {
         this.list = users
         // console.log(list)
       }
+    },
+    handleSizeChange (val) {
+      console.log(`每页 ${val} 条`)
+      this.pagesize = val
+      this.loadTableData()
+    },
+    handleCurrentChange (val) {
+      this.pagenum = val
+      this.loadTableData()
+      console.log(`当前页: ${val}`)
     }
   }
 }
