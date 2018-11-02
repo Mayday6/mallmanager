@@ -14,36 +14,62 @@
    </el-col>
 </el-row>
   <el-table
-      :data="tableData"
+      v-loading="loading"
+      :data="list"
       style="width: 100%">
       <el-table-column
-        :type="index"
-        label="日期"
-        width="100">
+        type="index"
+        label="#"
+        width="80">
       </el-table-column>
       <el-table-column
+        prop="username"
         label="姓名"
         width="100">
       </el-table-column>
        <el-table-column
+        prop="email"
         label="邮箱"
-        width="100">
+        width="150">
       </el-table-column>
        <el-table-column
+        prop="mobile"
         label="电话"
         width="100">
       </el-table-column>
        <el-table-column
         label="创建日期"
-        width="100">
+        width="180">
+        <!-- 格式化日期事件 -->
+        <template slot-scope="scope">
+          {{scope.row.create_time | fmtDate}}
+        </template>
       </el-table-column>
        <el-table-column
         label="用户状态"
         width="120">
+        <!-- 单元格的内容不是字符串的时候，
+        比如说其他的组件开关需要在组件外加容器template
+        slot-scope传值，
+        自带的固定属性
+        是接收值的意思后面的scope就是table中的list
+         -->
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949">
+          </el-switch>
+        </template>
       </el-table-column>
        <el-table-column
         label="操作"
         width="180">
+        <template slot-scope="scope">
+          <el-button type="primary" size="min" plain icon="el-icon-edit" circle></el-button>
+          <el-button type="danger" size="min" plain icon="el-icon-delete" circle></el-button>
+          <el-button type="success" size="min" plain icon="el-icon-check" circle></el-button>
+        </template>
       </el-table-column>
     </el-table>
 </el-card>
@@ -54,28 +80,9 @@
 export default {
   data () {
     return {
-      tableData: [
-        {
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        },
-        {
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        },
-        {
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        },
-        {
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        }
-      ]
+      list: [],
+      loading: true
+      // 表格加载的动画
     }
   },
   created () {
@@ -83,11 +90,21 @@ export default {
   },
   methods: {
     async loadTableData () {
+      this.loading = true
       // 各种功能都需要加入token
       const AUTH_TOKEN = sessionStorage.getItem('token')
-      this.$http.defaults.feaders.common['Authorization'] = AUTH_TOKEN
+      this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
       const res = await this.$http.get('users?pagenum=1&pagesize=10')
       console.log(res)
+      // 将返回的数据结构赋值
+      const {meta: {msg, status}, data: {users}} = res.data
+      console.log(msg)
+      // 判断数据
+      if (status === 200) {
+        this.loading = false
+        this.list = users
+        // console.log(list)
+      }
     }
   }
 }
