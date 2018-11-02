@@ -12,7 +12,25 @@
   </el-input>
    <el-button type="success" @click.prevent="showaddUser()">添加按钮</el-button>
    </el-col>
-</el-row>
+   <!-- 编辑用户的对话框 -->
+  </el-row>
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdituser">
+    <el-form :model="formData">
+      <el-form-item label="用户名" :label-width="formLabelWidth">
+        <el-input v-model="formData.username" autocomplete="off" disabled></el-input>
+      </el-form-item>
+      <el-form-item label="邮箱" :label-width="formLabelWidth">
+        <el-input v-model="formData.email" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="电话" :label-width="formLabelWidth">
+        <el-input v-model="formData.mobile" autocomplete="off"></el-input>
+      </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="dialogFormVisible = false">取 消</el-button>
+      <el-button type="primary" @click="edituser()">确 定</el-button>
+    </div>
+  </el-dialog>
    <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAddUser">
   <el-form :model="formData">
     <el-form-item label="用户名" :label-width="formLabelWidth">
@@ -88,7 +106,7 @@
         label="操作"
         width="180">
         <template slot-scope="scope">
-          <el-button type="primary" size="min" plain icon="el-icon-edit" circle></el-button>
+          <el-button type="primary" size="min" plain icon="el-icon-edit" circle @click="showEditBox(scope.row.id)"></el-button>
           <el-button type="danger" size="min" plain icon="el-icon-delete" circle @click.prevent="showDeleBox(scope.row.id)"></el-button>
           <el-button type="success" size="min" plain icon="el-icon-check" circle></el-button>
         </template>
@@ -131,7 +149,9 @@ export default {
         mobile: ''
       },
       // 对话框中的input的宽度
-      formLabelWidth: '120px'
+      formLabelWidth: '120px',
+      // 编辑用户对话框属性
+      dialogFormVisibleEdituser: false
     }
   },
   created () {
@@ -230,6 +250,22 @@ export default {
           this.formData[key] = ''
         }
       }
+    },
+    // 显示编辑的对话框
+    async showEditBox (userId) {
+      this.dialogFormVisibleEdituser = true
+      const res = await this.$http.get(`users/${userId}`)
+      // 将要编辑的内容设置到弹出的对话框
+      this.formData = res.data.data
+    },
+    // 对话框中的编辑发送请求
+    async edituser () {
+      // 关闭对话框
+      this.dialogFormVisibleEdituser = false
+      const res = await this.$http.put(`users/${this.formData.id}`, this.formData)
+      // 刷新表单
+      this.loadTableData()
+      this.$message.success(res.data.meta.msg)
     }
   }
 }
