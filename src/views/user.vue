@@ -51,6 +51,29 @@
     <el-button type="primary" @click="addUser()">确 定</el-button>
   </div>
 </el-dialog>
+<!-- 分配权限对话框 -->
+    <el-dialog title="分配权限" :visible.sync="dialogFormVisibleSetrole">
+    <el-form :model="formData">
+      <el-form-item label="用户名" :label-width="formLabelWidth" disabled>
+        {{currUserName}}
+      </el-form-item>
+      <el-form-item label="角色" :label-width="formLabelWidth">
+        <el-select v-model="currRoleId">
+          <el-option :value="-1" label="请选择" disabled></el-option>
+          <el-option
+            v-for="(item, index) in roles"
+            :key="index"
+            :label="item.roleName"
+            :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+      <el-button @click="dialogFormVisibleSetrole = false">取 消</el-button>
+      <el-button type="primary" @click="setRole()">确 定</el-button>
+    </div>
+  </el-dialog>
   <el-table
       v-loading="loading"
       :data="list"
@@ -108,7 +131,7 @@
         <template slot-scope="scope">
           <el-button type="primary" size="min" plain icon="el-icon-edit" circle @click="showEditBox(scope.row.id)"></el-button>
           <el-button type="danger" size="min" plain icon="el-icon-delete" circle @click.prevent="showDeleBox(scope.row.id)"></el-button>
-          <el-button type="success" size="min" plain icon="el-icon-check" circle></el-button>
+          <el-button type="success" size="min" plain icon="el-icon-check" circle @click="showRoleBox(scope.row)"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -151,7 +174,18 @@ export default {
       // 对话框中的input的宽度
       formLabelWidth: '120px',
       // 编辑用户对话框属性
-      dialogFormVisibleEdituser: false
+      dialogFormVisibleEdituser: false,
+      // 分配权限对话框的属性
+      dialogFormVisibleSetrole: false,
+      // 当前用户名
+      currUserName: '',
+      // 当前的角色名字
+      currRoleId: -1,
+      // 所有角色接收到这个数组中
+      roles: [],
+      // 设置角色提交时候的id的值
+      currentId: -1
+
     }
   },
   created () {
@@ -266,6 +300,28 @@ export default {
       // 刷新表单
       this.loadTableData()
       this.$message.success(res.data.meta.msg)
+    },
+    // 分配权限显示对话框
+    async showRoleBox (user) {
+      this.currentId = user.id
+      this.currUserName = user.username
+      this.dialogFormVisibleSetrole = true
+      const res = await this.$http.get('roles')
+      const res2 = await this.$http.get(`users/${user.id}`)
+      this.currRoleId = res2.data.data.rid
+      this.roles = res.data.data
+    },
+    // 分配权限发送请求
+    async setRole () {
+      const res = await this.$http.put(`users/${this.currentId}/role`, {rid: this.currRoleId})
+      // 解构赋值
+      const {meta: {status, msg}} = res.data
+      if (status === 200) {
+        this.$message.success(msg)
+      }
+      // 关闭对话框
+      this.dialogFormVisibleSetrole = false
+      this.currRoleId = -1
     }
   }
 }
